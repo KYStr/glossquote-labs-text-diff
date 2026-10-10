@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="在瀏覽器比較兩份文字，查看新增、移除與保留的行及行號。保留空白和大小寫差異，可下載閱讀報告，不傳送文字供遠端處理。">
+  <title>逐行文字差異比較｜GlossQuote-Labs</title>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script type="module" src="js/app.mjs"></script>
+  <link rel="modulepreload" href="js/worker.mjs">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">前往比較工作區</a>
+  <header class="topbar"><a class="brand" href="https://glossquote.com/index.html" aria-label="GlossQuote-Labs 工具首頁">GlossQuote-Labs</a><span>逐行文字差異</span><nav class="language-nav" aria-label="介面語言"><span aria-current="page">繁中</span><a href="en/index.html" lang="en" hreflang="en" aria-label="English — 切換語言會清除目前工作">English</a></nav><button id="clear" type="button">全部清除</button></header>
+  <main>
+    <div class="intro"><h1>比較兩份文字的逐行差異</h1><p>換行統一為 LF 比較；空白、Tab 與大小寫保留。</p></div>
+    <section id="workspace" aria-label="比較工作區" tabindex="-1">
+      <p id="input-help" class="limit-note">每側最多 128 KiB、1,000 行，每行最多 8,192 個 UTF-16 單位。內容僅在本頁記憶體處理。</p>
+      <div class="editors">
+        <div class="field"><label for="left">原版本</label><textarea id="left" rows="10" wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="input-help error"></textarea></div>
+        <div class="field"><label for="right">新版本</label><textarea id="right" rows="10" wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="input-help error"></textarea></div>
+      </div>
+      <div class="actions"><button id="swap" type="button">交換版本</button><button id="compare" class="primary" type="button">比較文字</button><button id="cancel" type="button" hidden>取消比較</button></div>
+      <p id="error" role="alert" hidden></p>
+      <div class="result-toolbar"><div><p id="status" role="status" aria-live="polite">貼上原版本和新版本，再比較差異。</p><p id="counts" class="counts">新增 0 行、移除 0 行、保留 0 行</p></div><button id="download" type="button" disabled>下載報告</button></div>
+      <div class="table-region" role="region" aria-label="逐行比較結果，可橫向捲動" tabindex="0"><table><caption>逐行比較結果</caption><thead><tr><th scope="col">原行</th><th scope="col">新行</th><th scope="col">狀態</th><th scope="col">內容</th></tr></thead><tbody id="rows"></tbody></table><p id="empty-result" class="empty-result">比較後，新增、移除與保留的行會顯示在這裡。</p></div>
+      <nav class="pagination" aria-label="結果分頁"><button id="previous" type="button" disabled>上一頁</button><span id="page" role="status">0 / 0 頁</span><button id="next" type="button" disabled>下一頁</button></nav>
+      <p class="report-note">報告是帶行前綴的純文字，不能當作 Git patch 使用。</p>
+    </section>
+    <noscript><p class="notice">比較需要啟用 JavaScript，所有說明仍可在下方閱讀。</p></noscript>
+    <section class="help" aria-labelledby="help-title">
+      <h2 id="help-title">如何比較兩個版本</h2>
+      <ol><li>將原版本與新版本貼到輸入區。任一側可以留空。</li><li>按「比較文字」，查看每一行的新增、移除與保留，以及兩側行號。</li><li>用上一頁／下一頁閱讀全部結果，或下載純文字閱讀報告。</li></ol>
+      <p>工具只比較，不會合併或修改原文。交換版本只會互換原文；編輯任一側會清除舊結果，需要重新比較。取消會保留兩份原文。</p>
+      <h2>比較規則與上限</h2>
+      <p>CRLF 和單獨的 CR 先轉成 LF，其餘字元不變。完整行精確相等才視為保留；多條最佳比對路徑等長時，優先移除原版本行。替換顯示為先移除、再新增。</p>
+      <p>每側原始文字的 UTF-8 上限是 131,072 bytes（128 KiB），UTF-16 長度也不得超過 131,072。轉換換行後最多 1,000 行，每行最多 8,192 個 UTF-16 單位；一個字元可能占多個 bytes 或單位。超限會停止整次比較，不截斷貼上的文字。</p>
+      <p>最多 2,000 筆結果，每頁 100 筆，不折疊保留行。運算超過 5 秒即停止；下載報告上限 512 KiB。</p>
+      <h2>常見問題</h2>
+      <h3>為什麼只多一個換行也有差異？</h3><p>最後的 LF 代表最後一個空行，會作為差異顯示。CRLF 和 LF 會先統一，所以換行種類本身不算差異。空字串是 0 行；一個 LF 則是兩個空行。</p>
+      <h3>可以忽略空格或大小寫嗎？</h3><p>目前按完整行精確比對，空格、Tab 和大小寫都保留。不會自動 trim 或改寫字元。</p>
+      <h3>下載報告能套用到 Git 嗎？</h3><p>不能。它是帶新增／移除前綴的閱讀報告，沒有 patch 檔的套用資訊。保留行前面有兩個空格，移除行是「- 」，新增行是「+ 」。</p>
+      <h3>可以比較很大的檔案嗎？</h3><p>每側上限 128 KiB、1,000 行，每行 8,192 個 UTF-16 單位。超過時請分段處理；本工具沒有檔案上傳功能。</p>
+      <h2>本頁的資料處理</h2>
+      <p>文字在你的瀏覽器記憶體中比較，不保存歷史、不寫入本機儲存空間、不傳送文字供遠端處理。頁面與程式等網站資源仍需載入；載入完成後可離線比較，關閉後離線重新開啟尚未保證。</p>
+      <p>「全部清除」會移除本頁持有的來源與結果並停止運算，不會刪除已下載的檔案，也不宣稱安全抹除瀏覽器或作業系統記憶體。切換語言會開啟另一頁並清除目前工作。</p>
+    </section>
+  </main>
+  <footer><a href="https://glossquote.com/index.html">所有工具</a><span>GlossQuote-Labs · 本機逐行比較</span></footer>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "glossquote-labs-text-diff",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
+    "build:release": "node scripts/build.mjs --release --site https://diff.glossquote.com",
+    "verify:dist": "node scripts/verify-dist.mjs",
+    "verify:release": "node scripts/verify-dist.mjs --release --site https://diff.glossquote.com",
+    "preview:release": "node scripts/serve.mjs --dist --release"
+  }
+}

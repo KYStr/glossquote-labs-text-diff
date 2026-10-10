@@ -1,0 +1,13 @@
+{
+  "name": "glossquote-labs-text-diff",
+  "compatibility_date": "2026-10-10",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "none",
+    "not_found_handling": "404-page"
+  },
+  "routes": [ { "pattern": "diff.glossquote.com", "custom_domain": true } ]
+}

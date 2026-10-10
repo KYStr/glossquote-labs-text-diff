@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Compare two versions of text in your browser. See added, removed and unchanged lines with line numbers, preserve spaces and case, and download a readable report without sending text for remote processing.">
+  <title>Line-by-line text diff | GlossQuote-Labs</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <script type="module" src="../js/app.mjs"></script>
+  <link rel="modulepreload" href="../js/worker.mjs">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to comparison</a>
+  <header class="topbar"><a class="brand" href="https://glossquote.com/en/index.html" aria-label="GlossQuote-Labs tools home">GlossQuote-Labs</a><span>Text diff</span><nav class="language-nav" aria-label="Interface language"><a href="../index.html" lang="zh-Hant" hreflang="zh-Hant" aria-label="繁中 — switching language clears your work">繁中</a><span aria-current="page">English</span></nav><button id="clear" type="button">Clear all</button></header>
+  <main>
+    <div class="intro"><h1>Compare text line by line</h1><p>Line endings are normalized to LF. Spaces, tabs and case are preserved.</p></div>
+    <section id="workspace" aria-label="Text comparison workspace" tabindex="-1">
+      <p id="input-help" class="limit-note">Up to 128 KiB and 1,000 lines per version, with 8,192 UTF-16 units per line. Text is processed in this page’s memory.</p>
+      <div class="editors">
+        <div class="field"><label for="left">Original version</label><textarea id="left" rows="10" wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="input-help error"></textarea></div>
+        <div class="field"><label for="right">New version</label><textarea id="right" rows="10" wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="input-help error"></textarea></div>
+      </div>
+      <div class="actions"><button id="swap" type="button">Swap versions</button><button id="compare" class="primary" type="button">Compare text</button><button id="cancel" type="button" hidden>Cancel comparison</button></div>
+      <p id="error" role="alert" hidden></p>
+      <div class="result-toolbar"><div><p id="status" role="status" aria-live="polite">Paste the original and new versions, then compare.</p><p id="counts" class="counts">Added: 0; removed: 0; unchanged: 0 (lines)</p></div><button id="download" type="button" disabled>Download report</button></div>
+      <div class="table-region" role="region" aria-label="Line comparison results, horizontally scrollable" tabindex="0"><table><caption>Line comparison results</caption><thead><tr><th scope="col">Old line</th><th scope="col">New line</th><th scope="col">Status</th><th scope="col">Content</th></tr></thead><tbody id="rows"></tbody></table><p id="empty-result" class="empty-result">Added, removed and unchanged lines will appear here after comparison.</p></div>
+      <nav class="pagination" aria-label="Result pages"><button id="previous" type="button" disabled>Previous page</button><span id="page" role="status">Page 0 of 0</span><button id="next" type="button" disabled>Next page</button></nav>
+      <p class="report-note">The report is plain text with line prefixes. It cannot be used as a Git patch.</p>
+    </section>
+    <noscript><p class="notice">Enable JavaScript to compare. Instructions below remain available.</p></noscript>
+    <section class="help" aria-labelledby="help-title">
+      <h2 id="help-title">How to compare two versions</h2>
+      <ol><li>Paste the original and new versions into their fields. Either side may be empty.</li><li>Select “Compare text” to see added, removed and unchanged lines, with both sets of line numbers.</li><li>Use Previous page and Next page to read every result, or download a plain-text reading report.</li></ol>
+      <p>This tool compares text without merging or editing the originals. Swapping only exchanges the two inputs. Editing either input clears the old result; compare again to update it. Cancelling keeps both versions.</p>
+      <h2>Comparison rules and limits</h2>
+      <p>CRLF and lone CR line endings become LF; other characters remain unchanged. Complete lines must match exactly to count as unchanged. When optimal matches tie, the original line is removed first. A replacement appears as a removal followed by an addition.</p>
+      <p>Each raw input is limited to 131,072 UTF-8 bytes (128 KiB) and 131,072 UTF-16 units. After normalizing line endings, each version may have up to 1,000 lines and each line up to 8,192 UTF-16 units. A character may use more than one byte or unit. An oversized input stops the whole comparison; pasted text is never silently truncated.</p>
+      <p>There are at most 2,000 result rows, shown in pages of 100. Unchanged lines stay visible. Comparison stops after 5 seconds. Downloads are limited to 512 KiB.</p>
+      <h2>Frequently asked questions</h2>
+      <h3>Why does one extra line ending count as a difference?</h3><p>A final LF creates a final empty line, which appears in the comparison. CRLF and LF are normalized, so their format alone is not a difference. An empty string has no lines; one LF has two empty lines.</p>
+      <h3>Can I ignore spaces or case?</h3><p>The tool compares complete lines exactly. Spaces, tabs and case are preserved. It does not trim text or rewrite characters.</p>
+      <h3>Can I apply the report in Git?</h3><p>No. It is a reading report with addition and removal prefixes, without the information needed to apply a patch. Unchanged lines start with two spaces; removed lines with “- ”; added lines with “+ ”.</p>
+      <h3>Can I compare large files?</h3><p>The limit per version is 128 KiB and 1,000 lines, with 8,192 UTF-16 units per line. Compare smaller sections if you exceed it. The tool has no file-upload feature.</p>
+      <h2>How this page handles text</h2>
+      <p>Text is compared in your browser’s memory. The page keeps no history, writes no text to browser storage and sends no text for remote processing. Website resources still need to load. Once they finish loading, comparison works offline; reopening the page offline after closing it is not guaranteed.</p>
+      <p>“Clear all” removes the inputs and results held by this page and stops processing. It does not delete downloaded files or claim to securely erase browser or operating-system memory. Switching language opens another page and clears your current work.</p>
+    </section>
+  </main>
+  <footer><a href="https://glossquote.com/en/index.html">All tools</a><span>GlossQuote-Labs · Local text comparison</span></footer>
+</body>
+</html>
