@@ -1,5 +1,15 @@
 # 逐行文字差異
 
+## Current live release — 2026-10-11
+
+[繁體中文](https://diff.glossquote.com/index.html) · [English](https://diff.glossquote.com/en/index.html)
+
+Deployed source: [a518ac5fbe9e](https://github.com/KYStr/glossquote-labs-text-diff/commit/a518ac5fbe9efcab30b9a2f3a8c3b4bdfc32e244); Cloudflare version `b432de10-ead8-4944-a0fd-b7c65c7ef2a3`. This dated status supersedes older candidate-only or NOT_DEPLOYED notes below. Later documentation-only commits do not change the deployed assets.
+
+Release verification passed: 16 public assets matched the reviewed build byte for byte across 39 HTTP response checks, including HTTPS, security headers, MIME, bilingual SEO, robots/sitemap, missing paths and configured redirects. Both language pages received scoped browser checks. Deletion-first ties and a trailing empty line were exercised.
+
+The runtime retains its previously accepted offline test evidence; this release changes hosting configuration and documentation, not tool algorithms. Full Network/Storage inspection, physical devices, assistive technology and all remaining documented manual checks are still NOT_RUN. Live publication is not a claim of exhaustive certification or search-engine indexing.
+
 原生雙語的本機逐行比較工具。MVP 已實作且必要本機 gate 通過；明確人工 NOT_RUN 見驗收紀錄。正式網站尚未由本對話部署。進度及實際結果見 HANDOFF.md 與 docs/RELEASE-CANDIDATE.md。
 
 給想核對兩個版本短文、清單或設定片段的人：左右貼入文字，查看新增、移除、保留的行與兩側行號。比較結果不會修改來源，也不執行內容。
