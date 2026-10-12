@@ -1,3 +1,5 @@
+> **2026-10-13 U03新版候選：本機必要gate PASS，待主代理独立驗收／部署及新版外驗。** 改版證據及重現步驟見 [U03驗收文件](U03-CHANGE-NAVIGATION-20261013.md)；既有正式站／舊版外驗不套用到新版。
+
 # 逐行文字差異：Release candidate
 
 2026-10-10，THREAD-03-text-diff。必要本機 MVP gate PASS，保留明確人工 NOT_RUN。此文件是審查後來源版的 release candidate；版本以本 repo Git HEAD 定位，最終 PUBLIC／remote HEAD 驗證另記於原工作區 HANDOFF。網站尚未由本任務部署。

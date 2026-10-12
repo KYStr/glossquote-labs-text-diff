@@ -25,6 +25,8 @@
       </div>
       <div class="actions"><button id="swap" type="button">交換版本</button><button id="compare" class="primary" type="button">比較文字</button><button id="cancel" type="button" hidden>取消比較</button></div>
       <p id="error" role="alert" hidden></p>
+      <nav class="change-navigation" aria-label="差異段導覽"><button id="previous-change" type="button" disabled>上一段差異</button><p id="change-position" role="status" aria-live="polite">0 / 0 段差異</p><button id="next-change" type="button" disabled>下一段差異</button></nav>
+      <p id="change-context" class="change-context">按「下一段差異」定位改動；一般翻頁仍可閱讀所有行。</p>
       <div class="result-toolbar"><div><p id="status" role="status" aria-live="polite">貼上原版本和新版本，再比較差異。</p><p id="counts" class="counts">新增 0 行、移除 0 行、保留 0 行</p></div><button id="download" type="button" disabled>下載報告</button></div>
       <div class="table-region" role="region" aria-label="逐行比較結果，可橫向捲動" tabindex="0"><table><caption>逐行比較結果</caption><thead><tr><th scope="col">原行</th><th scope="col">新行</th><th scope="col">狀態</th><th scope="col">內容</th></tr></thead><tbody id="rows"></tbody></table><p id="empty-result" class="empty-result">比較後，新增、移除與保留的行會顯示在這裡。</p></div>
       <nav class="pagination" aria-label="結果分頁"><button id="previous" type="button" disabled>上一頁</button><span id="page" role="status">0 / 0 頁</span><button id="next" type="button" disabled>下一頁</button></nav>
@@ -35,6 +37,7 @@
       <h2 id="help-title">如何比較兩個版本</h2>
       <ol><li>將原版本與新版本貼到輸入區。任一側可以留空。</li><li>按「比較文字」，查看每一行的新增、移除與保留，以及兩側行號。</li><li>用上一頁／下一頁閱讀全部結果，或下載純文字閱讀報告。</li></ol>
       <p>工具只比較，不會合併或修改原文。交換版本只會互換原文；編輯任一側會清除舊結果，需要重新比較。取消會保留兩份原文。</p>
+      <p>用「上一段差異／下一段差異」直接定位改動。連續的移除與新增算同一段，跨頁也不拆段。比較後先顯示 0／總段數，按下一段才定位；導覽不循環。一般翻頁保留選段，離開該段所在頁時會提示。下載報告始終包含所有頁的結果。</p>
       <h2>比較規則與上限</h2>
       <p>CRLF 和單獨的 CR 先轉成 LF，其餘字元不變。完整行精確相等才視為保留；多條最佳比對路徑等長時，優先移除原版本行。替換顯示為先移除、再新增。</p>
       <p>每側原始文字的 UTF-8 上限是 131,072 bytes（128 KiB），UTF-16 長度也不得超過 131,072。轉換換行後最多 1,000 行，每行最多 8,192 個 UTF-16 單位；一個字元可能占多個 bytes 或單位。超限會停止整次比較，不截斷貼上的文字。</p>

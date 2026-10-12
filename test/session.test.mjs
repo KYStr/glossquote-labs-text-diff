@@ -17,7 +17,8 @@ test('all invalidations increment ID, clear page/errors and carry no source text
     const next = transition(before, { type, left: 'SYNTHETIC' });
     assert.equal(next.jobId, 8); assert.equal(next.pageIndex, 0); assert.equal(next.error, null);
     assert.equal(transition(next, { type: 'RESULT', jobId: 7 }), next);
-    assert.deepEqual(Object.keys(next).sort(), ['error', 'jobId', 'pageIndex', 'status']);
+    assert.equal(next.changeIndex, -1);
+    assert.deepEqual(Object.keys(next).sort(), ['changeIndex', 'error', 'jobId', 'pageIndex', 'status']);
     assert.equal(before.jobId, 7);
   }
 });
@@ -39,4 +40,20 @@ test('worker exact request protocol and content-free failures', () => {
     assert.deepEqual(processRequest(payload), { type: 'result', jobId: 1, result: { ok: false, error: { code: 'INVALID_INPUT', side: null } } });
   }
   for (const payload of [null, {}, { jobId: -1 }, { jobId: Infinity }]) assert.equal(processRequest(payload), null);
+});
+
+test('U03 completion is unselected; page changes retain selection and ends never wrap', () => {
+  const running = transition(initialSession(), { type: 'START' });
+  const done = transition(running, { type: 'RESULT', jobId: running.jobId });
+  assert.equal(done.changeIndex, -1); assert.equal(done.pageIndex, 0);
+  const first = transition(done, { type: 'CHANGE', changeIndex: 0, totalChanges: 2, pageIndex: 1, totalPages: 5 });
+  const manual = transition(first, { type: 'PAGE', pageIndex: 2, totalPages: 5 });
+  assert.equal(manual.changeIndex, 0); assert.equal(manual.pageIndex, 2);
+  const last = transition(manual, { type: 'CHANGE', changeIndex: 1, totalChanges: 2, pageIndex: 3, totalPages: 5 });
+  for (const index of [-1, 2, 0.5]) assert.equal(transition(last, { type: 'CHANGE', changeIndex: index, totalChanges: 2, pageIndex: 1, totalPages: 5 }), last);
+  assert.equal(transition(running, { type: 'CHANGE', changeIndex: 0, totalChanges: 2, pageIndex: 1, totalPages: 5 }), running);
+  for (const type of ['START', 'INPUT', 'SWAP', 'CLEAR', 'CANCEL']) {
+    const reset = transition(last, { type }); assert.equal(reset.changeIndex, -1);
+    assert.equal(reset.pageIndex, 0); assert.equal(transition(reset, { type: 'RESULT', jobId: last.jobId }), reset);
+  }
 });

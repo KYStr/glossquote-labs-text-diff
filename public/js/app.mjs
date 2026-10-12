@@ -3,9 +3,10 @@ import { limits, wellFormed } from './core/lines.mjs';
 import { initialSession, transition } from './core/session.mjs';
 import { makeReport } from './core/report.mjs';
 import { messages, interpolate } from './locales.mjs';
+import { indexChanges, locateChange } from './core/changes.mjs';
 
-const elements = Object.fromEntries(['workspace', 'left', 'right', 'swap', 'compare', 'cancel', 'clear', 'download', 'status', 'error', 'counts', 'rows', 'page', 'previous', 'next', 'empty-result'].map(id => [id, document.getElementById(id)]));
-let session = initialSession(); let current = null; let worker = null; let watchdog = null;
+const elements = Object.fromEntries(['workspace', 'left', 'right', 'swap', 'compare', 'cancel', 'clear', 'download', 'status', 'error', 'counts', 'rows', 'page', 'previous', 'next', 'empty-result', 'previous-change', 'next-change', 'change-position', 'change-context'].map(id => [id, document.getElementById(id)]));
+let session = initialSession(); let current = null; let worker = null; let watchdog = null; let changes = [];
 let reportUrl = null; let revokeTimer = null;
 const supported = typeof Worker === 'function' && typeof TextEncoder === 'function' && typeof Blob === 'function' && typeof URL.createObjectURL === 'function' && typeof URL.revokeObjectURL === 'function';
 const t = messages[document.documentElement.lang] ?? messages.en;
@@ -39,7 +40,7 @@ function revokeReport() {
   if (revokeTimer !== null) clearTimeout(revokeTimer); revokeTimer = null;
   if (reportUrl !== null) URL.revokeObjectURL(reportUrl); reportUrl = null;
 }
-function clearResult() { revokeReport(); current = null; elements.rows.replaceChildren(); }
+function clearResult() { revokeReport(); current = null; changes = []; elements.rows.replaceChildren(); }
 function errorText(error) {
   if (error.code === 'WORKER_FAILED' && session.status === 'success' && current) return t.reportRetry;
   const side = error.side === 'left' ? t.left : error.side === 'right' ? t.right : t.text;
@@ -58,17 +59,32 @@ function render(message) {
   elements.page.textContent = interpolate(t.page, { current: format.format(total ? session.pageIndex + 1 : 0), total: format.format(total) });
   elements.previous.disabled = !total || session.pageIndex === 0; elements.next.disabled = !total || session.pageIndex + 1 >= total;
   elements['empty-result'].hidden = Boolean(current?.operations.length);
+  const selected = changes[session.changeIndex];
+  const values = { current: format.format(session.changeIndex + 1), total: format.format(changes.length), page: format.format(selected ? Math.floor(selected.startIndex / limits.pageSize) + 1 : 0) };
+  elements['change-position'].textContent = interpolate(selected ? t.changes.selected : t.changes.unselected, values);
+  const visible = selected && selected.startIndex < (session.pageIndex + 1) * limits.pageSize && selected.endIndex >= session.pageIndex * limits.pageSize;
+  elements['change-context'].textContent = selected ? interpolate(visible ? t.changes.visible : t.changes.offPage, values) : (session.status === 'success' || session.status === 'empty') && changes.length === 0 ? t.changes.none : t.changes.prompt;
+  elements['previous-change'].disabled = session.status !== 'success' || session.changeIndex <= 0;
+  elements['next-change'].disabled = session.status !== 'success' || changes.length === 0 || session.changeIndex + 1 >= changes.length;
 }
 function renderPage() {
   elements.rows.replaceChildren(); if (!current) return;
   const page = pageOperations(current.operations, session.pageIndex); if (!page.ok) return;
   const fragment = document.createDocumentFragment(); const labels = t.kinds;
-  for (const operation of page.value) {
+  const selected = changes[session.changeIndex];
+  for (const [offset, operation] of page.value.entries()) {
+    const operationIndex = session.pageIndex * limits.pageSize + offset;
     const row = document.createElement('tr'); row.className = operation.kind;
+    row.id = `operation-${operationIndex}`; row.dataset.operationIndex = String(operationIndex);
+    const inSelection = selected && operationIndex >= selected.startIndex && operationIndex <= selected.endIndex;
+    const target = inSelection && operationIndex === selected.startIndex;
+    if (inSelection) { row.classList.add('selected-change'); row.setAttribute('aria-describedby', 'change-position change-context'); }
+    if (target) { row.tabIndex = -1; row.setAttribute('aria-current', 'true'); }
     for (const [className, text] of [['number', operation.oldLine === null ? '—' : format.format(operation.oldLine)], ['number', operation.newLine === null ? '—' : format.format(operation.newLine)], ['kind', labels[operation.kind]], ['content', operation.text]]) {
       const cell = document.createElement('td'); cell.className = className;
       if (className === 'content' && text === '') { const blank = document.createElement('span'); blank.className = 'blank-line'; blank.textContent = t.blank; cell.append(blank); }
       else cell.textContent = text;
+      if (className === 'kind' && inSelection) { const marker = document.createElement('span'); marker.className = 'change-marker'; marker.textContent = target ? t.changes.start : t.changes.member; cell.append(marker); }
       row.append(cell);
     }
     fragment.append(row);
@@ -94,7 +110,11 @@ function run() {
       if (session.status !== 'running' || session.jobId !== jobId || data?.jobId !== jobId) return;
       if (!keysAre(data, 'jobId,result,type') || data.type !== 'result' || !validResult(data.result)) return fail('WORKER_FAILED', jobId);
       stopJob(); const result = data.result;
-      if (result.ok) current = result.value;
+      if (result.ok) {
+        const indexed = indexChanges(result.value.operations);
+        if (!indexed.ok) return fail('WORKER_FAILED', jobId);
+        current = result.value; changes = indexed.value;
+      }
       session = transition(session, { type: 'RESULT', jobId, empty: result.ok && current.operations.length === 0, error: result.ok ? null : result.error });
       if (session.status === 'empty') current = null;
       renderPage(); render(); if (session.error?.side) elements[session.error.side].focus();
@@ -121,6 +141,16 @@ elements.clear.addEventListener('click', () => { invalidate('CLEAR'); elements.l
 for (const [id, delta] of [['previous', -1], ['next', 1]]) elements[id].addEventListener('click', () => {
   session = transition(session, { type: 'PAGE', pageIndex: session.pageIndex + delta, totalPages: Math.ceil(current.operations.length / limits.pageSize) });
   renderPage(); render(interpolate(t.pageSummary, { current: format.format(session.pageIndex + 1), total: format.format(Math.ceil(current.operations.length / limits.pageSize)) }));
+});
+for (const [id, delta] of [['previous-change', -1], ['next-change', 1]]) elements[id].addEventListener('click', () => {
+  if (session.status !== 'success' || !current) return;
+  const changeIndex = session.changeIndex + delta;
+  const target = locateChange(changes, changeIndex); if (!target.ok) return;
+  session = transition(session, { type: 'CHANGE', changeIndex, totalChanges: changes.length, pageIndex: target.value.pageIndex, totalPages: Math.ceil(current.operations.length / limits.pageSize) });
+  renderPage(); render(interpolate(t.changes.located, { current: format.format(changeIndex + 1), total: format.format(changes.length), page: format.format(session.pageIndex + 1) }));
+  const row = document.getElementById(`operation-${target.value.operationIndex}`);
+  elements.rows.closest('.table-region').scrollLeft = 0;
+  row.focus({ preventScroll: true }); row.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
 });
 window.addEventListener('pagehide', () => { stopJob(); clearResult(); elements.left.value = ''; elements.right.value = ''; session = transition(session, { type: 'CLEAR' }); render(); });
 if (!supported) session = { ...initialSession(), status: 'error', error: { code: 'UNSUPPORTED', side: null } };

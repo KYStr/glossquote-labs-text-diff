@@ -25,6 +25,8 @@
       </div>
       <div class="actions"><button id="swap" type="button">Swap versions</button><button id="compare" class="primary" type="button">Compare text</button><button id="cancel" type="button" hidden>Cancel comparison</button></div>
       <p id="error" role="alert" hidden></p>
+      <nav class="change-navigation" aria-label="Change navigation"><button id="previous-change" type="button" disabled>Previous change</button><p id="change-position" role="status" aria-live="polite">Change 0 of 0</p><button id="next-change" type="button" disabled>Next change</button></nav>
+      <p id="change-context" class="change-context">Use Next change to find edits. Page controls still show every line.</p>
       <div class="result-toolbar"><div><p id="status" role="status" aria-live="polite">Paste the original and new versions, then compare.</p><p id="counts" class="counts">Added: 0; removed: 0; unchanged: 0 (lines)</p></div><button id="download" type="button" disabled>Download report</button></div>
       <div class="table-region" role="region" aria-label="Line comparison results, horizontally scrollable" tabindex="0"><table><caption>Line comparison results</caption><thead><tr><th scope="col">Old line</th><th scope="col">New line</th><th scope="col">Status</th><th scope="col">Content</th></tr></thead><tbody id="rows"></tbody></table><p id="empty-result" class="empty-result">Added, removed and unchanged lines will appear here after comparison.</p></div>
       <nav class="pagination" aria-label="Result pages"><button id="previous" type="button" disabled>Previous page</button><span id="page" role="status">Page 0 of 0</span><button id="next" type="button" disabled>Next page</button></nav>
@@ -35,6 +37,7 @@
       <h2 id="help-title">How to compare two versions</h2>
       <ol><li>Paste the original and new versions into their fields. Either side may be empty.</li><li>Select “Compare text” to see added, removed and unchanged lines, with both sets of line numbers.</li><li>Use Previous page and Next page to read every result, or download a plain-text reading report.</li></ol>
       <p>This tool compares text without merging or editing the originals. Swapping only exchanges the two inputs. Editing either input clears the old result; compare again to update it. Cancelling keeps both versions.</p>
+      <p>Use Previous change and Next change to jump directly to edits. Consecutive removals and additions form one change group, even across page boundaries. A new result starts at change 0; Next change selects the first group. Navigation does not wrap. Page controls keep your selection and indicate when it is off the current page. Downloads always include every result page.</p>
       <h2>Comparison rules and limits</h2>
       <p>CRLF and lone CR line endings become LF; other characters remain unchanged. Complete lines must match exactly to count as unchanged. When optimal matches tie, the original line is removed first. A replacement appears as a removal followed by an addition.</p>
       <p>Each raw input is limited to 131,072 UTF-8 bytes (128 KiB) and 131,072 UTF-16 units. After normalizing line endings, each version may have up to 1,000 lines and each line up to 8,192 UTF-16 units. A character may use more than one byte or unit. An oversized input stops the whole comparison; pasted text is never silently truncated.</p>
